@@ -49,29 +49,34 @@ nl_skycolor nlOverworldSkyColors(nl_environment env) {
   s.horizon = mix(NL_DAY_HORIZON_COL,NL_NIGHT_HORIZON_COL*f,nightFactor);
   s.horizonEdge = mix(NL_DAY_EDGE_COL,NL_NIGHT_EDGE_COL*f,nightFactor);
 
-  // Dawn / sunset transition
+    // Dawn / sunset transition
   float dawnFactor = 1.0-env.dayFactor*env.dayFactor;
-  dawnFactor = dawnFactordawnFactor;
-  dawnFactor = mix(1.0,dawnFactordawnFactor,nightFactor);
-  s.zenith = mix(s.zenith,NL_DAWN_ZENITH_COL,dawnFactor);
-  s.horizon = mix(s.horizon,NL_DAWN_HORIZON_COL,dawnFactor);
-  s.horizonEdge = mix(s.horizonEdge,NL_DAWN_EDGE_COL,dawnFactor);
+  dawnFactor *= dawnFactor*dawnFactor;
+  dawnFactor *= mix(1.0, dawnFactor*dawnFactor, nightFactor);
+
+  s.zenith = mix(s.zenith, NL_DAWN_ZENITH_COL, dawnFactor);
+  s.horizon = mix(s.horizon, NL_DAWN_HORIZON_COL, dawnFactor);
+  s.horizonEdge = mix(s.horizonEdge, NL_DAWN_EDGE_COL, dawnFactor);
 
   // Rain / cloudy sky
   float zh = dot(s.zenith, vec3_splat(0.33));
   float hh = dot(s.horizon, vec3_splat(0.33));
-  float rainMix = clamp(env.rainFactor*NL_SKY_RAIN_MIX_FACTOR,0.0,1.0);
-  s.zenith = mix(s.zenith,NL_RAIN_ZENITH_COL*zh,rainMix);
-  s.horizon = mix(s.horizon,NL_RAIN_HORIZON_COL*hh,rainMix);
-  s.horizonEdge = mix(s.horizonEdge,s.horizon,env.rainFactor);
+  float rainMix = clamp(env.rainFactor*NL_SKY_RAIN_MIX_FACTOR, 0.0, 1.0);
+
+  s.zenith = mix(s.zenith, NL_RAIN_ZENITH_COL*zh, rainMix);
+  s.horizon = mix(s.horizon, NL_RAIN_HORIZON_COL*hh, rainMix);
+  s.horizonEdge = mix(s.horizonEdge, s.horizon, env.rainFactor);
 
   // Underwater
   if (env.underwater) {
-  vec3 underwaterFog =
-  env.fogCol*env.fogCol*NL_UNDERWATER_TINT;
-  s.zenith = mix(2.0*underwaterFog,underwaterFog*zh,0.8);
-  s.horizon = mix(2.0*underwaterFog,underwaterFog*hh,0.8);
-  s.horizonEdge = s.horizon;
+    vec3 underwaterFog =
+      env.fogCol*env.fogCol*NL_UNDERWATER_TINT;
+
+    s.zenith = mix(2.0*underwaterFog, underwaterFog*zh, 0.8);
+    s.horizon = mix(2.0*underwaterFog, underwaterFog*hh, 0.8);
+    s.horizonEdge = s.horizon;
+  }
+
   return s;
 }
 
