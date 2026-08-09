@@ -94,27 +94,10 @@ vec4 renderCloudsRounded(
     d.y = 1.0 - d.y;
   }
 
-  vec3 cloudColor = 0.52 * (zenithCol + horizonCol);
-
-  // Cool blue fantasy cloud
-  cloudColor *= vec3(0.84, 0.93, 1.04);
-
-  // Soft cloud depth
-  float depth = smoothstep(0.10, 0.90, d.y);
-
-  // Soft highlight on cloud tops
-  cloudColor += 0.16*dot(cloudColor, vec3(0.3,0.4,0.3))*depth;
-
-  // Slight warm highlight during golden hour
-  float warm = smoothstep(0.55, 1.0, horizonCol.r);
-
-  cloudColor = mix(cloudColor, cloudColor*vec3(1.08, 1.02, 0.95), warm*0.18*(1.0-rain));
-
-  // Rain clouds become slightly darker
-  cloudColor *= 1.0 - 0.58*rain;
-
-  vec4 col = vec4(cloudColor, d.x);
-
+  vec4 col = vec4(0.58*zenithCol + 0.62*horizonCol, d.x);
+  col.rgb += dot(col.rgb, vec3(0.3,0.4,0.3))*d.y*d.y;
+  col.rgb = mix(col.rgb, vec3(1.0,0.98,0.94), 0.22 + 0.28*d.y*d.y);
+  col.rgb *= 1.0 - 0.72*rain;
   return col;
 }
 
@@ -153,8 +136,9 @@ vec4 renderClouds(vec2 p, float t, float rain, vec3 horizonCol, vec3 zenithCol, 
 
   vec4 col;
   col.a = a + c*(1.0-a);
-  col.rgb = horizonCol + horizonCol.ggg;
-  col.rgb = mix(col.rgb, 0.5*(zenithCol + zenithCol.ggg), shadow*mix(b, d, c));
+  col.rgb = 0.72*(horizonCol + horizonCol.ggg);
+  col.rgb = mix(col.rgb, 0.52*(zenithCol + zenithCol.ggg), shadow*mix(b, d, c));
+  col.rgb = mix(col.rgb, vec3(0.94,0.97,1.0), 0.20);
   col.rgb *= 1.0-0.7*rain;
 
   return col;

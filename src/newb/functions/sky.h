@@ -39,39 +39,29 @@ nl_skycolor nlEndSkyColors(nl_environment env) {
 
 nl_skycolor nlOverworldSkyColors(nl_environment env) {
   nl_skycolor s;
-
-  // Night brightness
   float f = 1.0 + 2.0*(1.0-max(-env.dayFactor, 0.0));
   float nightFactor = step(env.dayFactor, 0.0);
+  s.zenith = mix(NL_DAY_ZENITH_COL, NL_NIGHT_ZENITH_COL*f, nightFactor);
+  s.horizon = mix(NL_DAY_HORIZON_COL, NL_NIGHT_HORIZON_COL*f, nightFactor);
+  s.horizonEdge = mix(NL_DAY_EDGE_COL, NL_NIGHT_EDGE_COL*f, nightFactor);
 
-  // Base day/night colors
-  s.zenith = mix(NL_DAY_ZENITH_COL,NL_NIGHT_ZENITH_COL*f,nightFactor);
-  s.horizon = mix(NL_DAY_HORIZON_COL,NL_NIGHT_HORIZON_COL*f,nightFactor);
-  s.horizonEdge = mix(NL_DAY_EDGE_COL,NL_NIGHT_EDGE_COL*f,nightFactor);
-
-    // Dawn / sunset transition
   float dawnFactor = 1.0-env.dayFactor*env.dayFactor;
   dawnFactor *= dawnFactor*dawnFactor;
   dawnFactor *= mix(1.0, dawnFactor*dawnFactor, nightFactor);
-
+  dawnFactor = pow(clamp(dawnFactor, 0.0, 1.0), 1.0/max(NL_DAWN_SPREAD, 0.01));
   s.zenith = mix(s.zenith, NL_DAWN_ZENITH_COL, dawnFactor);
   s.horizon = mix(s.horizon, NL_DAWN_HORIZON_COL, dawnFactor);
   s.horizonEdge = mix(s.horizonEdge, NL_DAWN_EDGE_COL, dawnFactor);
 
-  // Rain / cloudy sky
   float zh = dot(s.zenith, vec3_splat(0.33));
   float hh = dot(s.horizon, vec3_splat(0.33));
-  float rainMix = clamp(env.rainFactor*NL_SKY_RAIN_MIX_FACTOR, 0.0, 1.0);
-
+  float rainMix = env.rainFactor*NL_SKY_RAIN_MIX_FACTOR;
   s.zenith = mix(s.zenith, NL_RAIN_ZENITH_COL*zh, rainMix);
   s.horizon = mix(s.horizon, NL_RAIN_HORIZON_COL*hh, rainMix);
   s.horizonEdge = mix(s.horizonEdge, s.horizon, env.rainFactor);
 
-  // Underwater
   if (env.underwater) {
-    vec3 underwaterFog =
-      env.fogCol*env.fogCol*NL_UNDERWATER_TINT;
-
+    vec3 underwaterFog = env.fogCol*env.fogCol*NL_UNDERWATER_TINT;
     s.zenith = mix(2.0*underwaterFog, underwaterFog*zh, 0.8);
     s.horizon = mix(2.0*underwaterFog, underwaterFog*hh, 0.8);
     s.horizonEdge = s.horizon;
@@ -112,6 +102,7 @@ vec3 renderOverworldSky(nl_skycolor skyCol, nl_environment env, vec3 viewDir, bo
   gradient2 = mix(gradient2, 1.0, mg8);
 
   float dawnFactor = 1.0-env.dayFactor*env.dayFactor;
+  dawnFactor = pow(clamp(dawnFactor, 0.0, 1.0), 1.0/max(NL_DAWN_SPREAD, 0.01));
   float df = mix(1.0, g2.x, dawnFactor*dawnFactor);
   vec3 sky = mix(skyCol.horizon, skyCol.horizonEdge, gradient1*df*df);
   sky = mix(skyCol.zenith, sky, gradient2*df);
@@ -123,6 +114,9 @@ vec3 renderOverworldSky(nl_skycolor skyCol, nl_environment env, vec3 viewDir, bo
     float source = max(0.0, (mg8-0.22)/0.78);
     source *= source;
     source *= source;
+    float sunBloom = source*(1.0-env.rainFactor)*NL_SUN_BLOOM;
+    sunBloom *= smoothstep(0.0, NL_SUN_BLOOM_RADIUS, mg8);
+    sky += vec3(1.0,0.96,0.86)*sunBloom*3.0;
     sky *= 1.0 + 15.0*source*(1.0-env.rainFactor);
   }
 
@@ -139,10 +133,10 @@ vec3 renderOverworldSky(nl_skycolor skyCol, nl_environment env, vec3 viewDir, bo
 
 // Author: devendrn, Title: Simple blackhole, License: CC BY-SA 4.0
 
-  #define NL_BH_COL_LOW vec3(0.025, 0.002, 0.055)
-  #define NL_BH_COL_HIGH vec3(0.85, 0.12, 1.35)
+  #define NL_BH_COL_LOW  vec3(0.025, 0.005, 0.060)
+  #define NL_BH_COL_HIGH vec3(1.00, 0.55, 0.22)
   #define NL_BH_DIST 1.1
-  #define NL_BH_SPEED 0.2
+  #define NL_BH_SPEED 0.20
 
   vec4 renderBlackhole(vec3 vdir, float t) {
     t *= NL_BH_SPEED;
@@ -202,7 +196,7 @@ vec3 renderEndSky(vec3 horizonCol, vec3 zenithCol, vec3 viewDir, float t) {
   g *= g;
 
   vec3 sky = mix(zenithCol, horizonCol, f*f);
-  sky += (0.1*streaks + 2.0*g*g*g + h*h*h)*vec3(2.0,0.5,0.0);
+  sky += (0.1*streaks + 2.0*g*g*g + h*h*h)*vec3(1.15,0.42,0.10);
   sky += 0.25*streaks*spectrum(sin(2.0*viewDir.x*viewDir.y+t));
 
   return sky;

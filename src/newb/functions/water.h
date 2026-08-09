@@ -66,7 +66,9 @@ vec4 nlWater(
   float fresnel = calculateFresnel(cosR, 0.07);
   float opacity = 1.0-cosR;
 
-  color.rgb *= 0.22*NL_WATER_TINT*(1.0-0.8*fresnel);
+  // tropical water keeps a visible vanilla base while adding cool cyan depth
+  color.rgb *= 0.25*NL_WATER_TINT*(1.0-0.72*fresnel);
+  color.rgb += 0.035*vec3(0.12,0.72,0.82)*(1.0-fresnel);
   color.a = mix(COLOR.a*NL_WATER_TRANSPARENCY, 1.0, opacity*opacity);
 
   #ifdef NL_WATER_WAVE

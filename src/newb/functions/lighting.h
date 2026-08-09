@@ -9,13 +9,12 @@
 
 vec3 sunLightTint(float dayFactor, float rain) {
   float nightFactor = step(dayFactor, 0.0);
-  float dawnFactor = 1.0 - dayFactor*dayFactor;
+  float dawnFactor = 1.0-dayFactor*dayFactor;
   dawnFactor *= dawnFactor*dawnFactor;
   dawnFactor *= mix(1.0, dawnFactor*dawnFactor, nightFactor);
-  vec3 tint = mix(NL_NOON_SUNLIGHT_COL,NL_NIGHT_MOONLIGHT_COL,nightFactor);
-  tint = mix(tint,NL_DAWN_SUNLIGHT_COL,dawnFactor);
-  // Rain desaturates sunlight naturally
-  tint = mix(tint,vec3_splat(dot(tint, vec3_splat(0.33))),rain*0.85);
+  vec3 tint = mix(NL_NOON_SUNLIGHT_COL, NL_NIGHT_MOONLIGHT_COL, nightFactor);
+  tint = mix(tint, NL_DAWN_SUNLIGHT_COL, dawnFactor);
+  tint = mix(tint, vec3_splat(dot(tint, vec3_splat(0.33))), rain);
   return tint;
 }
 
@@ -50,6 +49,9 @@ vec3 nlLighting(
 
     light = env.end ? NL_END_AMBIENT : NL_NETHER_AMBIENT;
     light *= gameBrightness;
+    if (env.end) {
+      light += vec3(0.08,0.035,0.10)*gameBrightness;
+    }
 
     lum = luminance(light);
     light += skycol.horizon/(1.0+lum);
@@ -102,12 +104,12 @@ vec3 nlLighting(
     light += vec3_splat(gameBrightness*(NL_MIN_LIGHTING_BOOST/(1.0+lum)));
   }
 
-  // darken at crevices
-  light *= COLOR.g > 0.35 ? 1.0 : 0.8;
+  // darken at crevices without crushing the cool fantasy palette
+  light *= COLOR.g > 0.35 ? 1.0 : 0.84;
 
   // brighten tree leaves
   if (isTree) {
-    light *= 1.25;
+    light *= 1.28;
   }
 
   return light;

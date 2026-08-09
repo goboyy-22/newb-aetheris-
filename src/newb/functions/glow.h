@@ -79,6 +79,8 @@ vec3 nlGlow(sampler2D tex, vec2 uv, float shimmer) {
     glow *= shimmer;
   #endif
 
+  // restrained emissive bloom: bright enough for fantasy ores without washing the world
+  glow *= 0.92 + 0.08*NL_GLOW_TEX;
   return glow * NL_GLOW_TEX;
 }
 

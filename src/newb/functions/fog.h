@@ -6,14 +6,10 @@ float nlRenderFogFade(float relativeDist, vec3 FOG_COLOR, vec2 FOG_CONTROL) {
     float fade = smoothstep(FOG_CONTROL.x, FOG_CONTROL.y, relativeDist);
 
     // misty effect
-    float density = NL_MIST_DENSITY*(15.0 - 12.0*FOG_COLOR.g);
+    float density = NL_MIST_DENSITY*(19.0 - 18.0*FOG_COLOR.g);
+    fade += (1.0-fade)*(0.3-0.3*exp(-relativeDist*relativeDist*density));
 
-    // Soft cinematic mist
-    float mist = 1.0 - exp(-relativeDist*relativeDist*density);
-
-    fade += (1.0-fade)*0.24*mist;
-
-    return NL_FOG*clamp(fade, 0.0, 1.0);
+    return NL_FOG * fade;
   #else
     return 0.0;
   #endif
@@ -37,15 +33,15 @@ float nlRenderGodRayIntensity(vec3 cPos, vec3 worldPos, float t, vec2 uv1, float
   vol *= vol*mask*uv1.y*(1.0-mask*mask);
   vol *= relativeDist*relativeDist;
 
-  // Strong cinematic dawn/dusk godray
-  float dawnMask = clamp(2.8*(FOG_COLOR.r - FOG_COLOR.b),0.0,1.0);
+  // dawn/dusk mask
+  float dawnMask = clamp(3.0*(FOG_COLOR.r-FOG_COLOR.b), 0.0, 1.0);
+  dawnMask += 0.35*clamp(FOG_COLOR.g-FOG_COLOR.b, 0.0, 1.0);
+  dawnMask = clamp(dawnMask, 0.0, 1.0);
 
-  vol *= dawnMask;
-
-  // Keep godray strong but smooth
-  vol = smoothstep(0.0, 0.075,vol);
-
-  return vol * 1.12;
+  // strong but soft fantasy godrays
+  vol *= dawnMask*NL_GODRAY;
+  vol = smoothstep(0.0, 0.08, vol);
+  return vol;
 }
 
 #endif
