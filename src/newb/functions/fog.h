@@ -49,7 +49,7 @@ float nlRenderFogFade(float relativeDist, vec3 FOG_COLOR, vec2 FOG_CONTROL) {
   
 {
   // offset wPos (only works upto 16 blocks)
-  vec3 offset = cPos - 16.0 fract(worldPos*0.0625);
+  vec3 offset = cPos*16.0*fract(worldPos*0.0625);
   offset = abs(2.0*fract(offset*0.0625) - 1.0);
   offset = offset*offset*(3.0 - 2.0*offset);
   vec3 nrmof = normalize(worldPos);
@@ -57,7 +57,7 @@ float nlRenderFogFade(float relativeDist, vec3 FOG_COLOR, vec2 FOG_CONTROL) {
   float diff = dot(offset, vec3(0.1, 0.2, 1.0)) + 0.07*t;
   float mask = nrmof.x*nrmof.x;
   float vol = sin(7.0*u + 1.5*diff)*sin(3.0*u + diff);
-  vol *=bvol*mask*uv1.y*(1.0 - mask*mask);
+  vol *= vol*mask*uv1.y*(1.0 - mask*mask);
   vol *= relativeDist*relativeDist;
 
   // Dawn / dusk mask
