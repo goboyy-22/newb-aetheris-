@@ -9,13 +9,15 @@ vec3 colorCorrection(vec3 col) {
   #endif
 
   // ref - https://64.github.io/tonemapping/
-  // Gentle highlight compression preserves the cool sky while keeping golden
-  // sunrise/sunset highlights from becoming overly orange or clipped.
-  col = max(col, float3(0.0, 0.0, 0.0));
+
+  // Prevent negative color values before tonemapping.
+  col = max(col, vec3_splat(0.0));
+
   #if NL_TONEMAP_TYPE == 3
     // extended reinhard tonemap
     const float whiteScale = 0.063;
     col = col*(1.0+col*whiteScale)/(1.0+col);
+
   #elif NL_TONEMAP_TYPE == 4
     // aces tonemap
     const float a = 1.04;
@@ -24,10 +26,17 @@ vec3 colorCorrection(vec3 col) {
     const float d = 0.56;
     const float e = 0.14;
     col *= 0.85;
-    col = clamp((col*(a*col + b)) / (col*(c*col + d) + e), 0.0, 1.0);
+    col = clamp(
+      (col*(a*col + b)) /
+      (col*(c*col + d) + e),
+      0.0,
+      1.0
+    );
+
   #elif NL_TONEMAP_TYPE == 2
     // simple reinhard tonemap
     col = col/(1.0+col);
+
   #elif NL_TONEMAP_TYPE == 1
     // exponential tonemap
     col = 1.0-exp(-col*0.8);
@@ -37,16 +46,23 @@ vec3 colorCorrection(vec3 col) {
   col = pow(col, vec3_splat(1.0/NL_GAMMA));
 
   #ifdef NL_SATURATION
-    col = mix(vec3_splat(luminance(col)), col, NL_SATURATION);
+    col = mix(
+      vec3_splat(luminance(col)),
+      col,
+      NL_SATURATION
+    );
   #endif
 
   #ifdef NL_TINT
-    col *= mix(NL_TINT_LOW, NL_TINT_HIGH, col);
+    col *= mix(
+      NL_TINT_LOW,
+      NL_TINT_HIGH,
+      col
+    );
   #endif
 
   return col;
 }
-
 // inv used in fogcolor for nether
 vec3 colorCorrectionInv(vec3 col) {
   #ifdef NL_TINT
