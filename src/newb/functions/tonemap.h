@@ -11,7 +11,7 @@ vec3 colorCorrection(vec3 col) {
   // ref - https://64.github.io/tonemapping/
   // Gentle highlight compression preserves the cool sky while keeping golden
   // sunrise/sunset highlights from becoming overly orange or clipped.
-  col = max(col, vec3(0.0));
+  col = max(col, float3(0.0, 0.0, 0.0));
   #if NL_TONEMAP_TYPE == 3
     // extended reinhard tonemap
     const float whiteScale = 0.063;
