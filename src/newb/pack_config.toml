@@ -29,10 +29,10 @@ credits = '''
 # right-most subpack is enabled by default
 
 [[subpack]]
-define = "LOW"
+define = "PERFORMANCE"
 materials = ["Sky", "RenderChunk", "Actor", "ActorGlint", "EndSky", "Clouds", "SunMoon", "Weather", "ItemInHandTextured", "ItemInHandColor", "ItemInHandColorGlint", "Stars"]
 description = '''
-LOW
+PERFORMANCE 
 '''
 
 [[subpack]]
