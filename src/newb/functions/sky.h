@@ -118,8 +118,8 @@ vec3 renderOverworldSky(nl_skycolor skyCol, nl_environment env, vec3 viewDir, bo
 
   // Cool cinematic tint
   vec3 coolTint = vec3(0.82, 0.94, 1.08);
-  sky *= mix(vec3(1.0), coolTint, 0.18*vertical);
-
+  sky = mix(float3(1.0, 1.0, 1.0), coolTint, 0.18*vertical);
+  
   // Soft colorful horizon
   sky += vec3(0.035, 0.055, 0.08)*horizonGlow;
 
