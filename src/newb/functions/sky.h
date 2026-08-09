@@ -39,33 +39,39 @@ nl_skycolor nlEndSkyColors(nl_environment env) {
 
 nl_skycolor nlOverworldSkyColors(nl_environment env) {
   nl_skycolor s;
+
+  // Night brightness
   float f = 1.0 + 2.0*(1.0-max(-env.dayFactor, 0.0));
   float nightFactor = step(env.dayFactor, 0.0);
-  s.zenith = mix(NL_DAY_ZENITH_COL, NL_NIGHT_ZENITH_COL*f, nightFactor);
-  s.horizon = mix(NL_DAY_HORIZON_COL, NL_NIGHT_HORIZON_COL*f, nightFactor);
-  s.horizonEdge = mix(NL_DAY_EDGE_COL, NL_NIGHT_EDGE_COL*f, nightFactor);
 
+  // Base day/night colors
+  s.zenith = mix(NL_DAY_ZENITH_COL,NL_NIGHT_ZENITH_COL*f,nightFactor);
+  s.horizon = mix(NL_DAY_HORIZON_COL,NL_NIGHT_HORIZON_COL*f,nightFactor);
+  s.horizonEdge = mix(NL_DAY_EDGE_COL,NL_NIGHT_EDGE_COL*f,nightFactor);
+
+  // Dawn / sunset transition
   float dawnFactor = 1.0-env.dayFactor*env.dayFactor;
-  dawnFactor *= dawnFactor*dawnFactor;
-  dawnFactor *= mix(1.0, dawnFactor*dawnFactor, nightFactor);
-  s.zenith = mix(s.zenith, NL_DAWN_ZENITH_COL, dawnFactor);
-  s.horizon = mix(s.horizon, NL_DAWN_HORIZON_COL, dawnFactor);
-  s.horizonEdge = mix(s.horizonEdge, NL_DAWN_EDGE_COL, dawnFactor);
+  dawnFactor = dawnFactordawnFactor;
+  dawnFactor = mix(1.0,dawnFactordawnFactor,nightFactor);
+  s.zenith = mix(s.zenith,NL_DAWN_ZENITH_COL,dawnFactor);
+  s.horizon = mix(s.horizon,NL_DAWN_HORIZON_COL,dawnFactor);
+  s.horizonEdge = mix(s.horizonEdge,NL_DAWN_EDGE_COL,dawnFactor);
 
+  // Rain / cloudy sky
   float zh = dot(s.zenith, vec3_splat(0.33));
   float hh = dot(s.horizon, vec3_splat(0.33));
-  float rainMix = env.rainFactor*NL_SKY_RAIN_MIX_FACTOR;
-  s.zenith = mix(s.zenith, NL_RAIN_ZENITH_COL*zh, rainMix);
-  s.horizon = mix(s.horizon, NL_RAIN_HORIZON_COL*hh, rainMix);
-  s.horizonEdge = mix(s.horizonEdge, s.horizon, env.rainFactor);
+  float rainMix = clamp(env.rainFactor*NL_SKY_RAIN_MIX_FACTOR,0.0,1.0);
+  s.zenith = mix(s.zenith,NL_RAIN_ZENITH_COL*zh,rainMix);
+  s.horizon = mix(s.horizon,NL_RAIN_HORIZON_COL*hh,rainMix);
+  s.horizonEdge = mix(s.horizonEdge,s.horizon,env.rainFactor);
 
+  // Underwater
   if (env.underwater) {
-    vec3 underwaterFog = env.fogCol*env.fogCol*NL_UNDERWATER_TINT;
-    s.zenith = mix(2.0*underwaterFog, underwaterFog*zh, 0.8);
-    s.horizon = mix(2.0*underwaterFog, underwaterFog*hh, 0.8);
-    s.horizonEdge = s.horizon;
-  }
-
+  vec3 underwaterFog =
+  env.fogCol*env.fogCol*NL_UNDERWATER_TINT;
+  s.zenith = mix(2.0*underwaterFog,underwaterFog*zh,0.8);
+  s.horizon = mix(2.0*underwaterFog,underwaterFog*hh,0.8);
+  s.horizonEdge = s.horizon;
   return s;
 }
 
@@ -125,6 +131,52 @@ vec3 renderOverworldSky(nl_skycolor skyCol, nl_environment env, vec3 viewDir, bo
 
   return sky;
 }
+
+// Author: devendrn, Title: Simple blackhole, License: CC BY-SA 4.0
+
+  #define NL_BH_COL_LOW vec3(0.025, 0.002, 0.055)
+  #define NL_BH_COL_HIGH vec3(0.85, 0.12, 1.35)
+  #define NL_BH_DIST 1.1
+  #define NL_BH_SPEED 0.2
+
+  vec4 renderBlackhole(vec3 vdir, float t) {
+    t *= NL_BH_SPEED;
+    
+    float r = 2.4;
+    //r += 0.1*t;
+    vec3 vr = vdir;
+    float cr = cos(r);
+    float sr = sin(r);
+    vec2 rot;
+    rot.x = cr * vr.x - sr * vr.y;
+    rot.y = sr * vr.x + cr * vr.y;
+    vr.xy = rot;
+    //r *= 2.0;
+    //vr.yz = mat2(cos(r), -sin(r), sin(r), cos(r)) * vr.yz;
+    
+    vec3 vd = vr - vec3(0.0, -1.0, 0.0);
+    float nl = sin(15.0*vd.x + t)*sin(15.0*vd.y - t)*sin(15.0*vd.z + t);
+    float a = atan2(vd.x, vd.z);
+    
+    float d = NL_BH_DIST*length(vd + 0.003*nl);
+    //d *= 1.2 + 0.8*sin(0.2*t);
+    float d0 = (0.6-d)/0.6;
+    float dm0 = 1.0-max(d0, 0.0);
+    
+    float gl = 1.0-clamp(-0.3*d0, 0.0, 1.0);
+    float gla = pow(1.0-min(abs(d0), 1.0), 8.0);
+    float gl8 = pow(gl, 8.0);
+    
+    float hole = 0.9*pow(dm0, 32.0) + 0.1*pow(dm0, 3.0);
+    float bh = (gla + 0.8*gl8 + 0.2*gl8*gl8) * hole;
+    
+    float df = sin(3.0*a - 4.0*d + 24.0*pow(1.4-d, 4.0) + t);
+    df *= 0.9 + 0.1*sin(8.0*a + d + 4.0*t - 4.0*df);
+    bh *= 1.0 + pow(df, 4.0)*hole*max(1.0-bh, 0.0);
+    
+    vec3 col = bh*4.0*mix(NL_BH_COL_LOW, NL_BH_COL_HIGH , min(bh, 1.0));
+    return vec4(col, hole);
+  }
 
 vec3 renderEndSky(vec3 horizonCol, vec3 zenithCol, vec3 viewDir, float t) {
   t *= 0.1;

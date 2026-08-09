@@ -94,9 +94,27 @@ vec4 renderCloudsRounded(
     d.y = 1.0 - d.y;
   }
 
-  vec4 col = vec4(zenithCol + horizonCol, d.x);
-  col.rgb += dot(col.rgb, vec3(0.3,0.4,0.3))*d.y*d.y;
-  col.rgb *= 1.0 - 0.8*rain;
+  vec3 cloudColor = 0.52 * (zenithCol + horizonCol);
+
+  // Cool blue fantasy cloud
+  cloudColor *= vec3(0.84, 0.93, 1.04);
+
+  // Soft cloud depth
+  float depth = smoothstep(0.10, 0.90, d.y);
+
+  // Soft highlight on cloud tops
+  cloudColor += 0.16*dot(cloudColor, vec3(0.3,0.4,0.3))*depth;
+
+  // Slight warm highlight during golden hour
+  float warm = smoothstep(0.55, 1.0, horizonCol.r);
+
+  cloudColor = mix(cloudColor, cloudColor*vec3(1.08, 1.02, 0.95), warm*0.18*(1.0-rain));
+
+  // Rain clouds become slightly darker
+  cloudColor *= 1.0 - 0.58*rain;
+
+  vec4 col = vec4(cloudColor, d.x);
+
   return col;
 }
 

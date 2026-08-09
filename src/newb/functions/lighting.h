@@ -9,12 +9,13 @@
 
 vec3 sunLightTint(float dayFactor, float rain) {
   float nightFactor = step(dayFactor, 0.0);
-  float dawnFactor = 1.0-dayFactor*dayFactor;
-  dawnFactor *= dawnFactor*dawnFactor;
-  dawnFactor *= mix(1.0, dawnFactor*dawnFactor, nightFactor);
-  vec3 tint = mix(NL_NOON_SUNLIGHT_COL, NL_NIGHT_MOONLIGHT_COL, nightFactor);
-  tint = mix(tint, NL_DAWN_SUNLIGHT_COL, dawnFactor);
-  tint = mix(tint, vec3_splat(dot(tint, vec3_splat(0.33))), rain);
+  float dawnFactor = 1.0 - dayFactor*dayFactor;
+  dawnFactor = dawnFactordawnFactor;
+  dawnFactor = mix(1.0, dawnFactordawnFactor, nightFactor);
+  vec3 tint = mix(NL_NOON_SUNLIGHT_COL,NL_NIGHT_MOONLIGHT_COL,nightFactor);
+  tint = mix(tint,NL_DAWN_SUNLIGHT_COL,dawnFactor);
+  // Rain desaturates sunlight naturally
+  tint = mix(tint,vec3_splat(dot(tint, vec3_splat(0.33))),rain*0.85);
   return tint;
 }
 
