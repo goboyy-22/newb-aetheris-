@@ -23,7 +23,7 @@ float nlRenderFogFade(float relativeDist, vec3 FOG_COLOR, vec2 FOG_CONTROL) {
   atmosphericFog += (1.0 - atmosphericFog)*nearMist*0.35;
 
   // Prevent the fog from becoming completely opaque too quickly
-  atmosphericFog = smoothstep(0.0, 1.0,batmosphericFog);
+  atmosphericFog = smoothstep(0.0, 1.0,atmosphericFog);
 
   // ------------------------------------------------------------
   // COOL FANTASY ATMOSPHERIC DEPTH
